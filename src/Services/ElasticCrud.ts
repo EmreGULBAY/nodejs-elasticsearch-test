@@ -92,3 +92,26 @@ export async function GETALL() {
   }
 }
 
+export async function UPDATE(id: string, document: Document) {
+  try {
+    const elasticStatus = await checkElasticStatus();
+    if (elasticStatus === false) {
+      throw new Error("ElasticSearch is not available");
+    }
+    const response = await client.update({
+      index: "hello",
+      id: id,
+      body: {
+        doc: {
+          name: document.name,
+          description: document.description,
+        },
+      },
+    });
+
+    return { status: true, data: response };
+  } catch (err: unknown) {
+    console.error("Error:", err);
+    return { status: false, data: "Internal Server Error" };
+  }
+}

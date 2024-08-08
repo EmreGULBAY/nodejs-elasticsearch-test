@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { checkElasticStatus } from "../Services/ElasticSearchService";
 import { First } from "../Services/ElasticInit";
 import { Document } from "../Interfaces/Document";
-import { DELETE, GET, GETALL, POST } from "../Services/ElasticCrud";
+import { DELETE, GET, GETALL, POST, UPDATE } from "../Services/ElasticCrud";
 
 export async function elasticFirst(req: Request, res: Response) {
   try {
@@ -119,6 +119,42 @@ export async function getAllDocs(req: Request, res: Response) {
   try {
     const docs = await GETALL();
     res.status(200).json(docs);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send("Internal Server Error");
+  }
+}
+
+export async function updateDoc(req: Request, res: Response) {
+  try {
+    const { id, name, description } = req.body;
+    if (!id || !name || !description) {
+      res.status(400).send("Missing input");
+      return;
+    }
+
+    if (
+      typeof id !== "number" ||
+      typeof name !== "string" ||
+      typeof description !== "string"
+    ) {
+      res.status(400).send("Invalid input");
+      return;
+    }
+
+    const docToUpdate: Document = {
+      id: id,
+      name: name,
+      description: description,
+    };
+
+    const elasticResponse = await UPDATE(id.toString(), docToUpdate);
+
+    if (elasticResponse.status === false) {
+      throw new Error(elasticResponse.data as string);
+    }
+
+    res.status(200).json(elasticResponse.data);
   } catch (error) {
     console.error("Error:", error);
     res.status(500).send("Internal Server Error");
